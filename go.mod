@@ -1,6 +1,6 @@
 module github.com/strongo/dalgo-end2end-tests
 
-go 1.17
+go 1.19
 
 require (
 	github.com/pkg/errors v0.9.1 // indirect
