@@ -2,14 +2,14 @@ package end2end
 
 import (
 	"context"
-	"github.com/strongo/dalgo/dal"
+	"github.com/dal-go/dalgo/dal"
 	"testing"
 )
 
 func testSingleOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	t.Run("single", func(t *testing.T) {
 		const id = "r0"
-		key := dal.NewKeyWithStrID(E2ETestKind1, id)
+		key := dal.NewKeyWithID(E2ETestKind1, id)
 		t.Run("delete", func(t *testing.T) {
 			err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 				return tx.Delete(ctx, key)
