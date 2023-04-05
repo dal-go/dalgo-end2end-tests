@@ -136,10 +136,20 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		}
 	})
 	t.Run("update_2_records", func(t *testing.T) {
-		data := make([]TestData, 3)
 		const newValue = "UpdateD"
 		updates := []dal.Update{
 			{Field: "StringProp", Value: newValue},
+		}
+		newRecords := func() []dal.Record {
+			data := make([]*TestData, 3)
+			for i := range data {
+				data[i] = new(TestData)
+			}
+			return []dal.Record{
+				dal.NewRecordWithData(k1r1Key, data[0]),
+				dal.NewRecordWithData(k1r2Key, data[1]),
+				dal.NewRecordWithData(k2r1Key, data[2]),
+			}
 		}
 		err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 			return tx.UpdateMulti(ctx, []*dal.Key{k1r1Key, k1r2Key}, updates)
@@ -147,24 +157,20 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		if err != nil {
 			t.Fatalf("failed to update 2 records at once: %v", err)
 		}
-		records := []dal.Record{
-			dal.NewRecordWithData(k1r1Key, &data[0]),
-			dal.NewRecordWithData(k1r2Key, &data[1]),
-			dal.NewRecordWithData(k2r1Key, &data[2]),
-		}
+		records := newRecords()
 		if err := db.GetMulti(ctx, records); err != nil {
 			t.Fatalf("failed to get 3 records at once: %v", err)
 		}
 		recordsMustExist(t, records)
-		if actual := data[0].StringProp; actual != newValue {
-			t.Errorf("record expected to have StringProp as '%v' but got '%v', key: %v", newValue, actual, records[0].Key())
+
+		asserRecord := func(i int, expected string) {
+			if actual := records[i].Data().(*TestData).StringProp; actual != expected {
+				t.Errorf("record #%d expected to have StringProp as '%v' but got '%v', key: %v", i+1, expected, actual, records[i].Key())
+			}
 		}
-		if actual := data[1].StringProp; actual != newValue {
-			t.Errorf("record expected to have StringProp as '%v' but got '%v', key: %v", newValue, actual, records[1].Key())
-		}
-		if actual := data[2].StringProp; actual != "k2r1str" {
-			t.Errorf("record expected to have StringProp as '%v' but got '%v', key: %v", newValue, actual, records[2].Key())
-		}
+		asserRecord(0, newValue)
+		asserRecord(1, newValue)
+		asserRecord(2, "k2r1str")
 	})
 	t.Run("cleanup_delete", func(t *testing.T) {
 		deleteAllRecords(ctx, t, db, allKeys)

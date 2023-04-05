@@ -1,5 +1,7 @@
 github.com/dal-go/dalgo v0.2.2 h1:xgmUJ5hSXnjo0Zx9UOXUjvNoimmM0kLMUqYnK5Cl2b0=
 github.com/dal-go/dalgo v0.2.2/go.mod h1:Ov7wCe2kOqIb+IKu3RKM+a3tGpg4foblLdkuyadoEwE=
+github.com/dal-go/dalgo v0.2.3 h1:n5B7kPf6YZn0gu1SP79USFMDB0BmuxhWLgI690lO7Ks=
+github.com/dal-go/dalgo v0.2.3/go.mod h1:Fv3s/hxtByMVY7PSOi6SJ/5B981kNCuKGBa5O0xHCnM=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/stretchr/testify v1.6.0 h1:jlIyCplCJFULU/01vCkhKuTyc3OorI3bJFuw6obfgho=
