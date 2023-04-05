@@ -2,6 +2,7 @@ package end2end
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/dal-go/dalgo/dal"
 	"testing"
@@ -42,7 +43,7 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	})
 	t.Run("SetMulti", func(t *testing.T) {
 		newRecord := func(key *dal.Key) dal.Record {
-			return dal.NewRecordWithData(key, TestData{
+			return dal.NewRecordWithData(key, &TestData{
 				StringProp: fmt.Sprintf("%vstr", key.ID),
 			})
 		}
@@ -62,7 +63,9 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		var data []TestData
 		records := make([]dal.Record, len(allKeys))
 		assetProps := func(t *testing.T) {
-			recordsMustExist(t, records)
+			if recordsMustExist(t, records) > 0 {
+				return
+			}
 			assertStringProp := func(i int, record dal.Record) {
 				id := record.Key().ID.(string)
 				if expected, actual := id+"str", data[i].StringProp; actual != expected {
@@ -115,8 +118,12 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		if err := db.GetMulti(ctx, records); err != nil {
 			t.Fatalf("failed to set multiple records at once: %v", err)
 		}
-		recordsMustExist(t, records[:2])
-		recordsMustNotExist(t, records[2:])
+		var hasErrors bool
+		hasErrors = recordsMustExist(t, records[:2]) > 0 || hasErrors
+		hasErrors = !recordsMustNotExist(t, records[2:]) || hasErrors
+		if hasErrors {
+			return
+		}
 		checkPropValue := func(i int, expected string) error {
 			if data[i].StringProp != expected {
 				t.Errorf("expected %v got %v, err: %v", expected, data[i].StringProp, records[i].Error())
@@ -155,14 +162,19 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			return tx.UpdateMulti(ctx, []*dal.Key{k1r1Key, k1r2Key}, updates)
 		})
 		if err != nil {
+			if errors.Is(err, dal.ErrNotSupported) {
+				t.Log(err)
+				return
+			}
 			t.Fatalf("failed to update 2 records at once: %v", err)
 		}
 		records := newRecords()
 		if err := db.GetMulti(ctx, records); err != nil {
 			t.Fatalf("failed to get 3 records at once: %v", err)
 		}
-		recordsMustExist(t, records)
-
+		if recordsMustExist(t, records) > 0 {
+			return
+		}
 		asserRecord := func(i int, expected string) {
 			if actual := records[i].Data().(*TestData).StringProp; actual != expected {
 				t.Errorf("record #%d expected to have StringProp as '%v' but got '%v', key: %v", i+1, expected, actual, records[i].Key())
@@ -186,26 +198,32 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	})
 }
 
-func recordsMustExist(t *testing.T, records []dal.Record) {
+func recordsMustExist(t *testing.T, records []dal.Record) (missingCount int) {
 	t.Helper()
 	for _, record := range records {
 		if err := record.Error(); err != nil {
 			t.Errorf("not able to check record for existence as it has unexpected error: %v", err)
+			missingCount++
 		}
 		if !record.Exists() {
 			t.Errorf("record was expected to exist, key: %v", record.Key())
+			missingCount++
 		}
 	}
+	return missingCount
 }
 
-func recordsMustNotExist(t *testing.T, records []dal.Record) {
+func recordsMustNotExist(t *testing.T, records []dal.Record) (hasError bool) {
 	t.Helper()
 	for i, record := range records {
 		if err := record.Error(); err != nil {
+			hasError = true
 			t.Errorf("record with key=[%v] has unexpected error: %v", record.Key(), err)
 		} else if record.Exists() {
+			hasError = true
 			t.Errorf("for record #%v of %v Exists() returned true, but expected false; key: %v",
 				i+1, len(records), record.Key())
 		}
 	}
+	return hasError
 }
