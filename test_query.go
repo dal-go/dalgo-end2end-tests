@@ -39,7 +39,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			for i, city := range models.Cities {
 				expectedIDs[i] = cityID(city)
 			}
-			assert.Equal(t, 3, len(anyIds))
+			assert.Equal(t, query2.Limit, len(anyIds))
 		})
 	})
 	t.Run(`SELECT * FROM Cities`, func(t *testing.T) {
@@ -69,7 +69,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			for i, city := range models.Cities {
 				expectedIDs[i] = cityID(city)
 			}
-			assert.Equal(t, len(models.Cities), len(records))
+			assert.Equal(t, query2.Limit, len(records))
 		})
 	})
 	return
