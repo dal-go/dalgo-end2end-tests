@@ -18,28 +18,36 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		query := dal.From(models.CitiesCollection).SelectKeysOnly(reflect.String)
 		t.Run("no_limit", func(t *testing.T) {
 			query2 := query
-			anyIds, err := db.SelectAllIDs(ctx, query2)
+			reader, err := db.QueryReader(ctx, query2)
 			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			var ids []int
+			if ids, err = dal.SelectAllIDs[int](reader, query2.Limit); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			expectedIDs := make([]any, len(models.Cities))
 			for i, city := range models.Cities {
 				expectedIDs[i] = cityID(city)
 			}
-			assert.Equal(t, len(models.Cities), len(anyIds), "expected ids: %+v, got: %+v", expectedIDs, anyIds)
+			assert.Equal(t, len(models.Cities), len(ids), "expected ids: %+v, got: %+v", expectedIDs, ids)
 		})
 		t.Run("limit=3", func(t *testing.T) {
 			query2 := query
 			query2.Limit = 3
-			anyIds, err := db.SelectAllIDs(ctx, query2)
+			reader, err := db.QueryReader(ctx, query2)
 			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			var ids []int
+			if ids, err = dal.SelectAllIDs[int](reader, query2.Limit); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			expectedIDs := make([]any, len(models.Cities))
 			for i, city := range models.Cities {
 				expectedIDs[i] = cityID(city)
 			}
-			assert.Equal(t, query2.Limit, len(anyIds))
+			assert.Equal(t, query2.Limit, len(ids))
 		})
 	})
 	t.Run(`SELECT * FROM Cities`, func(t *testing.T) {
@@ -48,7 +56,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		})
 		t.Run("no_limit", func(t *testing.T) {
 			query2 := query
-			records, err := db.SelectAll(ctx, query2)
+			records, err := db.QueryAllRecords(ctx, query2)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -61,7 +69,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		t.Run("no_limit", func(t *testing.T) {
 			query2 := query
 			query2.Limit = 3
-			records, err := db.SelectAll(ctx, query2)
+			records, err := db.QueryAllRecords(ctx, query2)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
