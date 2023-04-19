@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+	"sort"
 	"time"
 )
 
@@ -133,4 +135,18 @@ var Cities = []City{
 		Founded:       Year(660),
 		LastUpdatedAt: time.Now(),
 	},
+}
+
+var SortedCityIDs []string
+
+func CityID(city City) string {
+	return fmt.Sprintf("%s/%s", city.State, city.Name)
+}
+
+func init() {
+	SortedCityIDs = make([]string, len(Cities))
+	for i, city := range Cities {
+		SortedCityIDs[i] = CityID(city)
+	}
+	sort.Strings(SortedCityIDs)
 }

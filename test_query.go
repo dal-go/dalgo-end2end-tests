@@ -2,7 +2,6 @@ package end2end
 
 import (
 	"context"
-	"fmt"
 	"github.com/dal-go/dalgo-end2end-tests/models"
 	"github.com/dal-go/dalgo/dal"
 	"github.com/stretchr/testify/assert"
@@ -22,15 +21,11 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			var ids []int
-			if ids, err = dal.SelectAllIDs[int](reader, query2.Limit); err != nil {
+			var ids []string
+			if ids, err = dal.SelectAllIDs[string](reader, query2.Limit); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			expectedIDs := make([]any, len(models.Cities))
-			for i, city := range models.Cities {
-				expectedIDs[i] = cityID(city)
-			}
-			assert.Equal(t, len(models.Cities), len(ids), "expected ids: %+v, got: %+v", expectedIDs, ids)
+			assert.Equal(t, models.SortedCityIDs, ids)
 		})
 		t.Run("limit=3", func(t *testing.T) {
 			query2 := query
@@ -39,15 +34,13 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			var ids []int
-			if ids, err = dal.SelectAllIDs[int](reader, query2.Limit); err != nil {
+			var ids []string
+			if ids, err = dal.SelectAllIDs[string](reader, query2.Limit); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			expectedIDs := make([]any, len(models.Cities))
-			for i, city := range models.Cities {
-				expectedIDs[i] = cityID(city)
-			}
+			expectedIDs := models.SortedCityIDs[:query2.Limit]
 			assert.Equal(t, query2.Limit, len(ids))
+			assert.Equal(t, expectedIDs, ids)
 		})
 	})
 	t.Run(`SELECT * FROM Cities`, func(t *testing.T) {
@@ -60,10 +53,6 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			expectedIDs := make([]any, len(models.Cities))
-			for i, city := range models.Cities {
-				expectedIDs[i] = cityID(city)
-			}
 			assert.Equal(t, len(models.Cities), len(records))
 		})
 		t.Run("no_limit", func(t *testing.T) {
@@ -73,18 +62,10 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			expectedIDs := make([]any, len(models.Cities))
-			for i, city := range models.Cities {
-				expectedIDs[i] = cityID(city)
-			}
 			assert.Equal(t, query2.Limit, len(records))
 		})
 	})
 	return
-}
-
-func cityID(city models.City) string {
-	return fmt.Sprintf("%s/%s", city.State, city.Name)
 }
 
 func setupDataForQueryTests(ctx context.Context, db dal.Database) error {
@@ -92,7 +73,7 @@ func setupDataForQueryTests(ctx context.Context, db dal.Database) error {
 		records := make([]dal.Record, len(models.Cities))
 		for i, city := range models.Cities {
 			records[i] = dal.NewRecordWithData(
-				dal.NewKeyWithID(models.CitiesCollection, cityID(city)),
+				dal.NewKeyWithID(models.CitiesCollection, models.CityID(city)),
 				&city,
 			)
 		}
