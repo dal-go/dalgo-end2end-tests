@@ -105,8 +105,8 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			sort.Strings(ids)
-			//assert.Equal(t, 2, len(ids))
-			assert.Equal(t, []string{"Delhi/Delhi", "Maharashtra/Mumbai"}, ids)
+			expectedIDs := []string{dal.EscapeID("Delhi/Delhi"), dal.EscapeID("Maharashtra/Mumbai")}
+			assert.Equal(t, expectedIDs, ids)
 		})
 	})
 	return
