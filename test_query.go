@@ -21,9 +21,15 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		qb := dal.From(models.CitiesCollection)
 		t.Run("no_limit", func(t *testing.T) {
 			q := qb.SelectKeysOnly(reflect.String)
+			if q == nil {
+				t.Fatalf("query is nil")
+			}
 			reader, err := db.QueryReader(ctx, q)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
+			}
+			if reader == nil {
+				t.Fatalf("reader is nil")
 			}
 			var ids []string
 			if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
@@ -109,7 +115,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 func setupDataForQueryTests(ctx context.Context, db dal.Database) error {
 	return db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		records := make([]dal.Record, len(models.Cities))
-		for i := range models.Cities { // Do not use value vairable
+		for i := range models.Cities { // Do not use value `for _, city` variable as all record will have same pointer to last city
 			records[i] = dal.NewRecordWithData(
 				dal.NewKeyWithID(models.CitiesCollection, models.CityID(models.Cities[i])),
 				&models.Cities[i],
