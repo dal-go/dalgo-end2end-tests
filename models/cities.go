@@ -9,15 +9,15 @@ import (
 const CitiesCollection = "Cities"
 
 type City struct {
-	Name          string    `json:"name"`
-	State         string    `json:"state"`
-	Country       string    `json:"country"`
-	Population    int       `json:"population"` // in people
-	AreaSqKm      int       `json:"area_sq_km"` // in square kilometers
-	IsCapital     bool      `json:"is_capital"`
-	HasAirport    bool      `json:"has_airport"`
-	Founded       time.Time `json:"founded"`
-	LastUpdatedAt time.Time `json:"last_updated_at"`
+	Name          string
+	State         string
+	Country       string
+	Population    int // in people
+	AreaSqKm      int // in square kilometers
+	IsCapital     bool
+	HasAirport    bool
+	Founded       time.Time
+	LastUpdatedAt time.Time
 }
 
 func Year(year int) time.Time {
