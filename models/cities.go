@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"github.com/dal-go/dalgo/dal"
 	"sort"
 	"time"
 )
@@ -147,6 +148,7 @@ func init() {
 	SortedCityIDs = make([]string, len(Cities))
 	for i, city := range Cities {
 		SortedCityIDs[i] = CityID(city)
+		SortedCityIDs[i] = dal.EscapeID(CityID(city))
 	}
 	sort.Strings(SortedCityIDs)
 }
