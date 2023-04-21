@@ -72,24 +72,47 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			assert.Equal(t, q.Limit(), len(records))
 		})
 	})
-	t.Run("SELECT ID FROM Cities ORDER BY", func(t *testing.T) {
+	t.Run("SELECT ID FROM Cities ORDER BY Population", func(t *testing.T) {
 		qb := dal.From(models.CitiesCollection)
-		t.Run("population", func(t *testing.T) {
-			t.Run("ASC", func(t *testing.T) {
-				q := qb.
-					OrderBy(dal.AscendingField("Population")).
-					Limit(3).
-					SelectKeysOnly(reflect.String)
-				reader, err := db.QueryReader(ctx, q)
-				if err != nil {
-					t.Fatalf("unexpected error: %v", err)
-				}
-				var ids []string
-				if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
-					t.Fatalf("unexpected error: %v", err)
-				}
-				assert.Equal(t, 3, len(ids))
-			})
+		t.Run("ascending", func(t *testing.T) {
+			q := qb.
+				OrderBy(dal.AscendingField("Population")).
+				Limit(3).
+				SelectKeysOnly(reflect.String)
+			reader, err := db.QueryReader(ctx, q)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			var ids []string
+			if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			expectedIDs := []string{
+				dal.EscapeID("Tokyo/Tokyo"),
+				dal.EscapeID("Delhi/Delhi"),
+				dal.EscapeID("Shanghai/Shanghai"),
+			}
+			assert.Equal(t, expectedIDs, ids)
+		})
+		t.Run("descending", func(t *testing.T) {
+			q := qb.
+				OrderBy(dal.DescendingField("Population")).
+				Limit(3).
+				SelectKeysOnly(reflect.String)
+			reader, err := db.QueryReader(ctx, q)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			var ids []string
+			if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			expectedIDs := []string{
+				dal.EscapeID("Istanbul/Istanbul"),
+				dal.EscapeID("Sindh/Karachi"),
+				dal.EscapeID("Dhaka/Dhaka"),
+			}
+			assert.Equal(t, expectedIDs, ids)
 		})
 	})
 	t.Run("SELECT ID FROM Cities WHERE Country = 'IN'", func(t *testing.T) {
@@ -105,7 +128,10 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			sort.Strings(ids)
-			expectedIDs := []string{dal.EscapeID("Delhi/Delhi"), dal.EscapeID("Maharashtra/Mumbai")}
+			expectedIDs := []string{
+				dal.EscapeID("Delhi/Delhi"),
+				dal.EscapeID("Maharashtra/Mumbai"),
+			}
 			assert.Equal(t, expectedIDs, ids)
 		})
 	})
