@@ -141,7 +141,7 @@ var Cities = []City{
 var SortedCityIDs []string
 
 func CityID(city City) string {
-	return fmt.Sprintf("%s/%s", city.State, city.Name)
+	return fmt.Sprintf("%s_%s", city.State, city.Name)
 }
 
 func init() {

@@ -2,18 +2,41 @@ package end2end
 
 import (
 	"context"
+	"fmt"
 	"github.com/dal-go/dalgo-end2end-tests/models"
 	"github.com/dal-go/dalgo/dal"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 )
 
+func selectAllCities(ctx context.Context, db dal.Database) (records []dal.Record, err error) {
+	time.Sleep(1 * time.Second)
+	q := dal.From(models.CitiesCollection).SelectInto(func() dal.Record {
+		return dal.NewRecordWithIncompleteKey(models.CitiesCollection, reflect.String, &models.City{})
+	})
+	return db.QueryAllRecords(ctx, q)
+}
+
 func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
+	defer func() {
+		if err := deleteAllCities(ctx, db); err != nil {
+			t.Fatalf("unexpected error while deleting test data: %v", err)
+		}
+	}()
 	if err := setupDataForQueryTests(ctx, db); err != nil {
 		t.Fatalf("unexpected error while setting up test data: %v", err)
 	}
+
+	// This is to work around eventual consistency
+	{
+		if _, err := selectAllCities(ctx, db); err != nil {
+			t.Fatalf("unexpected error while loading all cities: %v", err)
+		}
+	}
+
 	var newCityRecord = func() dal.Record {
 		return dal.NewRecordWithIncompleteKey(models.CitiesCollection, reflect.String, &models.City{})
 	}
@@ -35,7 +58,8 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			assert.Equal(t, models.SortedCityIDs, ids)
+			expectedIDs := models.SortedCityIDs
+			assert.Equal(t, expectedIDs, ids)
 		})
 		t.Run("limit=3", func(t *testing.T) {
 			q := qb.Limit(3).SelectKeysOnly(reflect.String)
@@ -88,9 +112,9 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			expectedIDs := []string{
-				dal.EscapeID("Tokyo/Tokyo"),
-				dal.EscapeID("Delhi/Delhi"),
-				dal.EscapeID("Shanghai/Shanghai"),
+				dal.EscapeID("Istanbul_Istanbul"),
+				dal.EscapeID("Sindh_Karachi"),
+				dal.EscapeID("Dhaka_Dhaka"),
 			}
 			assert.Equal(t, expectedIDs, ids)
 		})
@@ -108,9 +132,9 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			expectedIDs := []string{
-				dal.EscapeID("Istanbul/Istanbul"),
-				dal.EscapeID("Sindh/Karachi"),
-				dal.EscapeID("Dhaka/Dhaka"),
+				dal.EscapeID("Tokyo_Tokyo"),
+				dal.EscapeID("Delhi_Delhi"),
+				dal.EscapeID("Shanghai_Shanghai"),
 			}
 			assert.Equal(t, expectedIDs, ids)
 		})
@@ -129,8 +153,8 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			}
 			sort.Strings(ids)
 			expectedIDs := []string{
-				dal.EscapeID("Delhi/Delhi"),
-				dal.EscapeID("Maharashtra/Mumbai"),
+				dal.EscapeID("Delhi_Delhi"),
+				dal.EscapeID("Maharashtra_Mumbai"),
 			}
 			assert.Equal(t, expectedIDs, ids)
 		})
@@ -138,7 +162,33 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	return
 }
 
+func deleteAllCities(ctx context.Context, db dal.Database) error {
+	return db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
+		q := dal.From(models.CitiesCollection).Limit(1000).SelectKeysOnly(reflect.String)
+		var reader dal.Reader
+		var err error
+		if reader, err = db.QueryReader(ctx, q); err != nil {
+			return fmt.Errorf("failed to query all cities: %w", err)
+		}
+		var ids []string
+		ids, err = dal.SelectAllIDs[string](reader, q.Limit())
+		keys := make([]*dal.Key, len(ids))
+		for i, id := range ids {
+			keys[i] = dal.NewKeyWithID(models.CitiesCollection, id)
+		}
+		if len(ids) == 0 {
+			return nil
+		}
+		return tx.DeleteMulti(ctx, keys)
+	})
+}
 func setupDataForQueryTests(ctx context.Context, db dal.Database) error {
+	if err := deleteAllCities(ctx, db); err != nil {
+		return fmt.Errorf("failed to delete all cities 1st time: %w", err)
+	}
+	//if err := deleteAllCities(ctx, db); err != nil {
+	//	return fmt.Errorf("failed to delete all cities 2nd time: %w", err)
+	//}
 	return db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		records := make([]dal.Record, len(models.Cities))
 		for i := range models.Cities { // Do not use value `for _, city` variable as all record will have same pointer to last city
