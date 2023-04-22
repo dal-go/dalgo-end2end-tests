@@ -9,5 +9,5 @@ func TestEndToEnd(t *testing.T) {
 			t.Fatal("should panic on nil parameters")
 		}
 	}()
-	TestDalgoDB(nil, nil)
+	TestDalgoDB(nil, nil, nil, true)
 }

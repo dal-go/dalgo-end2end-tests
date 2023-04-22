@@ -13,15 +13,14 @@ import (
 )
 
 func selectAllCities(ctx context.Context, db dal.Database) (records []dal.Record, err error) {
-	time.Sleep(1 * time.Second)
 	q := dal.From(models.CitiesCollection).SelectInto(func() dal.Record {
 		return dal.NewRecordWithIncompleteKey(models.CitiesCollection, reflect.String, &models.City{})
 	})
 	return db.QueryAllRecords(ctx, q)
 }
 
-func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
-	defer func() {
+func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database, eventuallyConsistent bool) {
+	defer func() { // Cleanup after test
 		if err := deleteAllCities(ctx, db); err != nil {
 			t.Fatalf("unexpected error while deleting test data: %v", err)
 		}
@@ -30,8 +29,8 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		t.Fatalf("unexpected error while setting up test data: %v", err)
 	}
 
-	// This is to work around eventual consistency
-	{
+	if eventuallyConsistent { // This is to work around eventual consistency
+		time.Sleep(1 * time.Second)
 		if _, err := selectAllCities(ctx, db); err != nil {
 			t.Fatalf("unexpected error while loading all cities: %v", err)
 		}
@@ -162,8 +161,8 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	return
 }
 
-func deleteAllCities(ctx context.Context, db dal.Database) error {
-	return db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
+func deleteAllCities(ctx context.Context, db dal.Database) (err error) {
+	err = db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		q := dal.From(models.CitiesCollection).Limit(1000).SelectKeysOnly(reflect.String)
 		var reader dal.Reader
 		var err error
@@ -181,14 +180,16 @@ func deleteAllCities(ctx context.Context, db dal.Database) error {
 		}
 		return tx.DeleteMulti(ctx, keys)
 	})
-}
-func setupDataForQueryTests(ctx context.Context, db dal.Database) error {
-	if err := deleteAllCities(ctx, db); err != nil {
-		return fmt.Errorf("failed to delete all cities 1st time: %w", err)
+	if err != nil {
+		return fmt.Errorf("failed to delete all cities: %w", err)
 	}
-	//if err := deleteAllCities(ctx, db); err != nil {
-	//	return fmt.Errorf("failed to delete all cities 2nd time: %w", err)
-	//}
+	return nil
+}
+
+func setupDataForQueryTests(ctx context.Context, db dal.Database) (err error) {
+	if err := deleteAllCities(ctx, db); err != nil {
+		return err
+	}
 	return db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		records := make([]dal.Record, len(models.Cities))
 		for i := range models.Cities { // Do not use value `for _, city` variable as all record will have same pointer to last city

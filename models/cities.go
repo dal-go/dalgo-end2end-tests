@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const CitiesCollection = "Cities"
+const CitiesCollection = "DalgoTest_Cities"
 
 type City struct {
 	Name          string
