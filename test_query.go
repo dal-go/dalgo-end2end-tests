@@ -158,7 +158,6 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database, eve
 			assert.Equal(t, expectedIDs, ids)
 		})
 	})
-	return
 }
 
 func deleteAllCities(ctx context.Context, db dal.Database) (err error) {
@@ -170,7 +169,9 @@ func deleteAllCities(ctx context.Context, db dal.Database) (err error) {
 			return fmt.Errorf("failed to query all cities: %w", err)
 		}
 		var ids []string
-		ids, err = dal.SelectAllIDs[string](reader, q.Limit())
+		if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
+			return fmt.Errorf("failed to query all cities: %w", err)
+		}
 		keys := make([]*dal.Key, len(ids))
 		for i, id := range ids {
 			keys[i] = dal.NewKeyWithID(models.CitiesCollection, id)
