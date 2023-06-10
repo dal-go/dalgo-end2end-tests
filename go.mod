@@ -3,8 +3,8 @@ module github.com/dal-go/dalgo-end2end-tests
 go 1.20
 
 require (
-	github.com/dal-go/dalgo v0.2.30
-	github.com/stretchr/testify v1.8.3
+	github.com/dal-go/dalgo v0.2.31
+	github.com/stretchr/testify v1.8.4
 	github.com/strongo/validation v0.0.5
 )
 
