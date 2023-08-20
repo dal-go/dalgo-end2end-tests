@@ -32,7 +32,7 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		records := make([]dal.Record, 3)
 		for i := 0; i < 3; i++ {
 			records[i] = dal.NewRecordWithData(
-				dal.NewKey("NonExistingKind", dal.WithStringID(fmt.Sprintf("non_existing_id_%v", i))),
+				dal.NewKeyWithID("NonExistingKind", fmt.Sprintf("non_existing_id_%v", i)),
 				&TestData{},
 			)
 		}
