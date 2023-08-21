@@ -54,7 +54,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database, eve
 				t.Fatalf("reader is nil")
 			}
 			var ids []string
-			if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
+			if ids, err = dal.SelectAllIDs[string](reader, dal.WithLimit(q.Limit())); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			expectedIDs := models.SortedCityIDs
@@ -67,7 +67,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database, eve
 				t.Fatalf("unexpected error: %v", err)
 			}
 			var ids []string
-			if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
+			if ids, err = dal.SelectAllIDs[string](reader, dal.WithLimit(q.Limit())); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			assert.Equal(t, q.Limit(), len(ids))
@@ -107,7 +107,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database, eve
 				t.Fatalf("unexpected error: %v", err)
 			}
 			var ids []string
-			if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
+			if ids, err = dal.SelectAllIDs[string](reader, dal.WithLimit(q.Limit())); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			expectedIDs := []string{
@@ -127,7 +127,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database, eve
 				t.Fatalf("unexpected error: %v", err)
 			}
 			var ids []string
-			if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
+			if ids, err = dal.SelectAllIDs[string](reader, dal.WithLimit(q.Limit())); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			expectedIDs := []string{
@@ -147,7 +147,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.Database, eve
 				t.Fatalf("unexpected error: %v", err)
 			}
 			var ids []string
-			if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
+			if ids, err = dal.SelectAllIDs[string](reader, dal.WithLimit(q.Limit())); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			sort.Strings(ids)
@@ -169,7 +169,7 @@ func deleteAllCities(ctx context.Context, db dal.Database) (err error) {
 			return fmt.Errorf("failed to query all cities: %w", err)
 		}
 		var ids []string
-		if ids, err = dal.SelectAllIDs[string](reader, q.Limit()); err != nil {
+		if ids, err = dal.SelectAllIDs[string](reader, dal.WithLimit(q.Limit())); err != nil {
 			return fmt.Errorf("failed to query all cities: %w", err)
 		}
 		keys := make([]*dal.Key, len(ids))
