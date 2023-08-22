@@ -36,7 +36,7 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 		deleteAllRecords(ctx, t, db, allKeys)
 	})
 	t.Run("get_3_non_existing_records", func(t *testing.T) {
-		get3NonExistingRecords(t, db, k1r1Key, k1r2Key, k2r1Key)
+		get3NonExistingRecords(t, db)
 	})
 	t.Run("SetMulti", func(t *testing.T) {
 		setMulti(t, db, k1r1Key, k1r2Key, k2r1Key)
@@ -46,7 +46,7 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			getMulti3existingRecords(t, allKeys, db)
 		})
 		t.Run("2_existing_2_missing_records", func(t *testing.T) {
-			getMulti2existing2missingRecords(t, db, k1r1Key, k1r2Key, k2r1Key)
+			getMulti2existing2missingRecords(t, db, k1r1Key, k1r2Key)
 		})
 	})
 	t.Run("update_2_records", func(t *testing.T) {
@@ -57,7 +57,7 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	})
 }
 
-func getMulti2existing2missingRecords(t *testing.T, db dal.Database, k1r1Key, k1r2Key, k2r1Key *dal.Key) {
+func getMulti2existing2missingRecords(t *testing.T, db dal.Database, k1r1Key, k1r2Key *dal.Key) {
 	keys := []*dal.Key{
 		k1r1Key,
 		k1r2Key,
@@ -98,7 +98,7 @@ func getMulti2existing2missingRecords(t *testing.T, db dal.Database, k1r1Key, k1
 	}
 }
 
-func get3NonExistingRecords(t *testing.T, db dal.Database, k1r1Key, k1r2Key, k2r1Key *dal.Key) {
+func get3NonExistingRecords(t *testing.T, db dal.Database) {
 	records := make([]dal.Record, 3)
 	for i := 0; i < 3; i++ {
 		records[i] = dal.NewRecordWithData(
