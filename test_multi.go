@@ -41,11 +41,13 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	t.Run("SetMulti", func(t *testing.T) {
 		setMulti(t, db, k1r1Key, k1r2Key, k2r1Key)
 	})
-	t.Run("GetMulti_3_existing_records", func(t *testing.T) {
-		getMulti3existingRecords(t, allKeys, db)
-	})
-	t.Run("GetMulti_2_existing_2_missing_records", func(t *testing.T) {
-		getMulti2existing2missingRecords(t, db, k1r1Key, k1r2Key, k2r1Key)
+	t.Run("GetMulti", func(t *testing.T) {
+		t.Run("3_existing_records", func(t *testing.T) {
+			getMulti3existingRecords(t, allKeys, db)
+		})
+		t.Run("2_existing_2_missing_records", func(t *testing.T) {
+			getMulti2existing2missingRecords(t, db, k1r1Key, k1r2Key, k2r1Key)
+		})
 	})
 	t.Run("update_2_records", func(t *testing.T) {
 		update2records(t, db, k1r1Key, k1r2Key, k2r1Key)
