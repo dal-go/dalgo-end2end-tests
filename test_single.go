@@ -34,7 +34,7 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.Database) {
 			})
 		}
 		if keepGoing {
-			keepGoing = t.Run("delete2", func(t *testing.T) {
+			/*keepGoing*/ _ = t.Run("delete2", func(t *testing.T) {
 				testSingleDelete(t, db, key)
 			})
 		}
