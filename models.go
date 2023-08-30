@@ -24,8 +24,8 @@ type User struct {
 
 // TestData describes a test entity to be stored in a DALgo database
 type TestData struct {
-	StringProp  string
-	IntegerProp int
+	StringProp  string `json:"stringProp,omitempty" db:"StringProp"`
+	IntegerProp int    `json:"integerProp" db:"IntegerProp"`
 }
 
 // Validate returns error if not valid

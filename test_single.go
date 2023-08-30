@@ -10,20 +10,34 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	t.Run("single", func(t *testing.T) {
 		const id = "r0"
 		key := dal.NewKeyWithID(E2ETestKind1, id)
-		t.Run("delete1", func(t *testing.T) {
-			testSingleDelete(t, db, key)
-		})
-		t.Run("get", func(t *testing.T) {
-			testSingleGet(t, db, key)
-		})
-		t.Run("create", func(t *testing.T) {
-			t.Run("with_predefined_id", func(t *testing.T) {
-				testSingleCreateWithPredefinedID(t, db, key)
+		var keepGoing bool = true
+		if keepGoing {
+			keepGoing = t.Run("delete1", func(t *testing.T) {
+				testSingleDelete(t, db, key)
 			})
-		})
-		t.Run("delete2", func(t *testing.T) {
-			testSingleDelete(t, db, key)
-		})
+		}
+		if keepGoing {
+			keepGoing = t.Run("get1", func(t *testing.T) {
+				testSingleGet(t, db, key, false)
+			})
+		}
+		if keepGoing {
+			keepGoing = t.Run("create", func(t *testing.T) {
+				t.Run("with_predefined_id", func(t *testing.T) {
+					testSingleCreateWithPredefinedID(t, db, key)
+				})
+			})
+		}
+		if keepGoing {
+			keepGoing = t.Run("get2", func(t *testing.T) {
+				testSingleGet(t, db, key, true)
+			})
+		}
+		if keepGoing {
+			keepGoing = t.Run("delete2", func(t *testing.T) {
+				testSingleDelete(t, db, key)
+			})
+		}
 	})
 }
 
@@ -38,19 +52,30 @@ func testSingleDelete(t *testing.T, db dal.Database, key *dal.Key) {
 
 }
 
-func testSingleGet(t *testing.T, db dal.Database, key *dal.Key) {
-	data := TestData{
-		StringProp:  "str1",
-		IntegerProp: 1,
-	}
+func testSingleGet(t *testing.T, db dal.Database, key *dal.Key, mustExists bool) {
+	var data = new(TestData)
+	record := dal.NewRecordWithData(key, data)
 	ctx := context.Background()
-	record := dal.NewRecordWithData(key, &data)
-	if err := db.Get(ctx, record); err != nil {
-		if !dal.IsNotFound(err) {
+	err := db.Get(ctx, record)
+	if err != nil {
+		if dal.IsNotFound(err) {
+			if mustExists {
+				t.Errorf("record expected to exist but received error: %v", err)
+			}
+		} else {
 			t.Errorf("unexpected error: %v", err)
 		}
+	} else {
+		if data.StringProp == "" {
+			t.Error("field 'StringProp' is unexpectedely empty")
+		}
+		if data.IntegerProp == 0 {
+			t.Error("field 'IntegerProp' is unexpectedely 0")
+		}
+		if !mustExists {
+			t.Error("record unexpectedely found")
+		}
 	}
-
 }
 
 func testSingleCreateWithPredefinedID(t *testing.T, db dal.Database, key *dal.Key) {

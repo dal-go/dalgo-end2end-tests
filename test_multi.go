@@ -193,11 +193,12 @@ func update2records(t *testing.T, db dal.Database, k1r1Key, k1r2Key, k2r1Key *da
 }
 
 func recordsMustExist(t *testing.T, records []dal.Record) (missingCount int) {
-	t.Helper()
 	for _, record := range records {
-		if err := record.Error(); err != nil && errors.Is(err, dal.NoError) {
-			t.Errorf("not able to check record for existence as it has unexpected error: %v", err)
-			missingCount++
+		if err := record.Error(); err != nil {
+			if !errors.Is(err, dal.NoError) {
+				t.Errorf("not able to check record for existence as it has unexpected error: %v", err)
+				missingCount++
+			}
 		}
 		if !record.Exists() {
 			t.Errorf("record was expected to exist, key: %v", record.Key())
@@ -212,7 +213,7 @@ func recordsMustNotExist(t *testing.T, records []dal.Record) (hasError bool) {
 	for i, record := range records {
 		if err := record.Error(); err != nil {
 			hasError = true
-			t.Errorf("record with key=[%v] has unexpected error: %v", record.Key(), err)
+			t.Errorf("expected to get `%v` error for  record with key=[%v] but got unexpected error: %v", dal.ErrRecordNotFound, record.Key(), err)
 		} else if record.Exists() {
 			hasError = true
 			t.Errorf("for record #%v of %v Exists() returned true, but expected false; key: %v",
