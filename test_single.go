@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func testSingleOperations(ctx context.Context, t *testing.T, db dal.Database) {
+func testSingleOperations(ctx context.Context, t *testing.T, db dal.DB) {
 	t.Run("single", func(t *testing.T) {
 		const id = "r0"
 		key := dal.NewKeyWithID(E2ETestKind1, id)
@@ -41,7 +41,7 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	})
 }
 
-func testSingleDelete(t *testing.T, db dal.Database, key *dal.Key) {
+func testSingleDelete(t *testing.T, db dal.DB, key *dal.Key) {
 	ctx := context.Background()
 	err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		return tx.Delete(ctx, key)
@@ -52,7 +52,7 @@ func testSingleDelete(t *testing.T, db dal.Database, key *dal.Key) {
 
 }
 
-func testSingleGet(t *testing.T, db dal.Database, key *dal.Key, mustExists bool) {
+func testSingleGet(t *testing.T, db dal.DB, key *dal.Key, mustExists bool) {
 	var data = new(TestData)
 	record := dal.NewRecordWithData(key, data)
 	ctx := context.Background()
@@ -78,7 +78,7 @@ func testSingleGet(t *testing.T, db dal.Database, key *dal.Key, mustExists bool)
 	}
 }
 
-func testSingleCreateWithPredefinedID(t *testing.T, db dal.Database, key *dal.Key) {
+func testSingleCreateWithPredefinedID(t *testing.T, db dal.DB, key *dal.Key) {
 	data := TestData{
 		StringProp:  "str1",
 		IntegerProp: 1,

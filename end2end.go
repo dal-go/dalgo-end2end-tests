@@ -7,7 +7,7 @@ import (
 )
 
 // TestDalgoDB tests a dalgo DB implementation
-func TestDalgoDB(t *testing.T, db dal.Database, errQuerySupport error, eventuallyConsistent bool) {
+func TestDalgoDB(t *testing.T, db dal.DB, errQuerySupport error, eventuallyConsistent bool) {
 	if t == nil {
 		panic("t == nil")
 	}

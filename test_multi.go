@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func deleteAllRecords(ctx context.Context, t *testing.T, db dal.Database, keys []*dal.Key) {
+func deleteAllRecords(ctx context.Context, t *testing.T, db dal.DB, keys []*dal.Key) {
 	err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		return tx.DeleteMulti(ctx, keys)
 	})
@@ -17,7 +17,7 @@ func deleteAllRecords(ctx context.Context, t *testing.T, db dal.Database, keys [
 	}
 }
 
-func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
+func testMultiOperations(ctx context.Context, t *testing.T, db dal.DB) {
 
 	var k1r1Key = dal.NewKeyWithID(E2ETestKind1, "k1r1")
 	var k1r2Key = dal.NewKeyWithID(E2ETestKind1, "k1r2")
@@ -57,7 +57,7 @@ func testMultiOperations(ctx context.Context, t *testing.T, db dal.Database) {
 	})
 }
 
-func getMulti2existing2missingRecords(t *testing.T, db dal.Database, k1r1Key, k1r2Key *dal.Key) {
+func getMulti2existing2missingRecords(t *testing.T, db dal.DB, k1r1Key, k1r2Key *dal.Key) {
 	keys := []*dal.Key{
 		k1r1Key,
 		k1r2Key,
@@ -70,7 +70,9 @@ func getMulti2existing2missingRecords(t *testing.T, db dal.Database, k1r1Key, k1
 		records[i] = dal.NewRecordWithData(key, &data[i])
 	}
 	ctx := context.Background()
-	if err := db.GetMulti(ctx, records); err != nil {
+	if err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
+		return tx.GetMulti(ctx, records)
+	}); err != nil {
 		t.Fatalf("failed to set multiple records at once: %v", err)
 	}
 	var hasErrors bool
@@ -98,7 +100,7 @@ func getMulti2existing2missingRecords(t *testing.T, db dal.Database, k1r1Key, k1
 	}
 }
 
-func get3NonExistingRecords(t *testing.T, db dal.Database) {
+func get3NonExistingRecords(t *testing.T, db dal.DB) {
 	records := make([]dal.Record, 3)
 	for i := 0; i < 3; i++ {
 		records[i] = dal.NewRecordWithData(
@@ -107,13 +109,16 @@ func get3NonExistingRecords(t *testing.T, db dal.Database) {
 		)
 	}
 	ctx := context.Background()
-	if err := db.GetMulti(ctx, records); err != nil {
+
+	if err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
+		return tx.GetMulti(ctx, records)
+	}); err != nil {
 		t.Fatalf("failed to get multiple records at once: %v", err)
 	}
 	recordsMustNotExist(t, records)
 
 }
-func setMulti(t *testing.T, db dal.Database, k1r1Key, k1r2Key, k2r1Key *dal.Key) {
+func setMulti(t *testing.T, db dal.DB, k1r1Key, k1r2Key, k2r1Key *dal.Key) {
 	newRecord := func(key *dal.Key) dal.Record {
 		return dal.NewRecordWithData(key, &TestData{
 			StringProp: fmt.Sprintf("%vstr", key.ID),
@@ -134,7 +139,7 @@ func setMulti(t *testing.T, db dal.Database, k1r1Key, k1r2Key, k2r1Key *dal.Key)
 
 }
 
-func cleanupDelete(t *testing.T, db dal.Database, allKeys []*dal.Key) {
+func cleanupDelete(t *testing.T, db dal.DB, allKeys []*dal.Key) {
 	ctx := context.Background()
 	deleteAllRecords(ctx, t, db, allKeys)
 	data := make([]struct{}, len(allKeys))
@@ -142,13 +147,15 @@ func cleanupDelete(t *testing.T, db dal.Database, allKeys []*dal.Key) {
 	for i := range records {
 		records[i] = dal.NewRecordWithData(allKeys[i], &data[i])
 	}
-	if err := db.GetMulti(ctx, records); err != nil {
+	if err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
+		return tx.GetMulti(ctx, records)
+	}); err != nil {
 		t.Fatalf("failed to get multiple records at once: %v", err)
 	}
 	recordsMustNotExist(t, records)
 }
 
-func update2records(t *testing.T, db dal.Database, k1r1Key, k1r2Key, k2r1Key *dal.Key) {
+func update2records(t *testing.T, db dal.DB, k1r1Key, k1r2Key, k2r1Key *dal.Key) {
 	const newValue = "UpdateD"
 	updates := []dal.Update{
 		{Field: "StringProp", Value: newValue},
@@ -176,7 +183,9 @@ func update2records(t *testing.T, db dal.Database, k1r1Key, k1r2Key, k2r1Key *da
 		t.Fatalf("failed to update 2 records at once: %v", err)
 	}
 	records := newRecords()
-	if err := db.GetMulti(ctx, records); err != nil {
+	if err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
+		return tx.GetMulti(ctx, records)
+	}); err != nil {
 		t.Fatalf("failed to get 3 records at once: %v", err)
 	}
 	if recordsMustExist(t, records) > 0 {
@@ -223,7 +232,7 @@ func recordsMustNotExist(t *testing.T, records []dal.Record) (hasError bool) {
 	return hasError
 }
 
-func getMulti3existingRecords(t *testing.T, allKeys []*dal.Key, db dal.Database) {
+func getMulti3existingRecords(t *testing.T, allKeys []*dal.Key, db dal.DB) {
 	var data []TestData
 	records := make([]dal.Record, len(allKeys))
 	assetProps := func(t *testing.T) {
@@ -246,7 +255,9 @@ func getMulti3existingRecords(t *testing.T, allKeys []*dal.Key, db dal.Database)
 			records[i] = dal.NewRecordWithData(allKeys[i], &data[i])
 		}
 		ctx := context.Background()
-		if err := db.GetMulti(ctx, records); err != nil {
+		if err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
+			return tx.GetMulti(ctx, records)
+		}); err != nil {
 			t.Fatalf("failed to get multiple records at once: %v", err)
 		}
 		if recordsMustExist(t, records) > 0 {
