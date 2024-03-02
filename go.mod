@@ -5,8 +5,8 @@ go 1.21
 toolchain go1.21.4
 
 require (
-	github.com/dal-go/dalgo v0.12.0
-	github.com/stretchr/testify v1.8.4
+	github.com/dal-go/dalgo v0.12.1
+	github.com/stretchr/testify v1.9.0
 	github.com/strongo/validation v0.0.6
 )
 
