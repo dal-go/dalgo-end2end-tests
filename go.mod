@@ -5,7 +5,7 @@ go 1.23
 toolchain go1.23.0
 
 require (
-	github.com/dal-go/dalgo v0.12.2
+	github.com/dal-go/dalgo v0.13.0
 	github.com/stretchr/testify v1.9.0
 	github.com/strongo/validation v0.0.6
 )
