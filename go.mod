@@ -1,13 +1,11 @@
 module github.com/dal-go/dalgo-end2end-tests
 
-go 1.23
-
-toolchain go1.23.0
+go 1.22
 
 require (
-	github.com/dal-go/dalgo v0.13.0
+	github.com/dal-go/dalgo v0.13.1
 	github.com/stretchr/testify v1.9.0
-	github.com/strongo/validation v0.0.6
+	github.com/strongo/validation v0.0.7
 )
 
 //replace github.com/dal-go/dalgo => ../dalgo
