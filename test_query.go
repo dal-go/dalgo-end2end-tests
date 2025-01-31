@@ -13,7 +13,7 @@ import (
 )
 
 func selectAllCities(ctx context.Context, db dal.DB) (records []dal.Record, err error) {
-	q := dal.From(models.CitiesCollection).SelectInto(func() dal.Record {
+	q := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).SelectInto(func() dal.Record {
 		return dal.NewRecordWithIncompleteKey(models.CitiesCollection, reflect.String, &models.City{})
 	})
 	err = db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
@@ -44,7 +44,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		return dal.NewRecordWithIncompleteKey(models.CitiesCollection, reflect.String, &models.City{})
 	}
 	t.Run(`SELECT ID FROM Cities`, func(t *testing.T) {
-		qb := dal.From(models.CitiesCollection)
+		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, ""))
 		t.Run("no_limit", func(t *testing.T) {
 			q := qb.SelectKeysOnly(reflect.String)
 			if q == nil {
@@ -89,7 +89,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		})
 	})
 	t.Run(`SELECT * FROM Cities`, func(t *testing.T) {
-		qb := dal.From(models.CitiesCollection)
+		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, ""))
 		t.Run("no_limit", func(t *testing.T) {
 			query2 := qb.SelectInto(newCityRecord)
 			err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
@@ -116,7 +116,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		})
 	})
 	t.Run("SELECT ID FROM Cities ORDER BY Population", func(t *testing.T) {
-		qb := dal.From(models.CitiesCollection)
+		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, ""))
 		t.Run("ascending", func(t *testing.T) {
 			q := qb.
 				OrderBy(dal.AscendingField("Population")).
@@ -159,7 +159,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		})
 	})
 	t.Run("SELECT ID FROM Cities WHERE Country = 'IN'", func(t *testing.T) {
-		qb := dal.From(models.CitiesCollection)
+		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, ""))
 		t.Run("no_limit", func(t *testing.T) {
 			q := qb.WhereField("Country", dal.Equal, "IN").SelectKeysOnly(reflect.String)
 			reader, err := db.QueryReader(ctx, q)
@@ -182,7 +182,7 @@ func testQueryOperations(ctx context.Context, t *testing.T, db dal.DB, eventuall
 
 func deleteAllCities(ctx context.Context, db dal.DB) (err error) {
 	err = db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
-		q := dal.From(models.CitiesCollection).Limit(1000).SelectKeysOnly(reflect.String)
+		q := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).Limit(1000).SelectKeysOnly(reflect.String)
 		var reader dal.Reader
 		var err error
 		if reader, err = db.QueryReader(ctx, q); err != nil {

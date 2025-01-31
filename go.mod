@@ -3,7 +3,7 @@ module github.com/dal-go/dalgo-end2end-tests
 go 1.22
 
 require (
-	github.com/dal-go/dalgo v0.14.2
+	github.com/dal-go/dalgo v0.15.0
 	github.com/stretchr/testify v1.10.0
 	github.com/strongo/validation v0.0.7
 )
