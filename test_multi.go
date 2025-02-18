@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dal-go/dalgo/dal"
+	"github.com/dal-go/dalgo/update"
 	"testing"
 )
 
@@ -75,8 +76,7 @@ func getMulti2existing2missingRecords(t *testing.T, db dal.DB, k1r1Key, k1r2Key 
 	}); err != nil {
 		t.Fatalf("failed to set multiple records at once: %v", err)
 	}
-	var hasErrors bool
-	hasErrors = recordsMustExist(t, records[:2]) > 0 || hasErrors
+	hasErrors := recordsMustExist(t, records[:2]) > 0
 	hasErrors = !recordsMustNotExist(t, records[2:]) || hasErrors
 	if hasErrors {
 		return
@@ -157,8 +157,8 @@ func cleanupDelete(t *testing.T, db dal.DB, allKeys []*dal.Key) {
 
 func update2records(t *testing.T, db dal.DB, k1r1Key, k1r2Key, k2r1Key *dal.Key) {
 	const newValue = "UpdateD"
-	updates := []dal.Update{
-		{Field: "StringProp", Value: newValue},
+	updates := []update.Update{
+		update.ByFieldName("StringProp", newValue),
 	}
 	newRecords := func() []dal.Record {
 		data := make([]*TestData, 3)
