@@ -204,7 +204,7 @@ func update2records(t *testing.T, db dal.DB, k1r1Key, k1r2Key, k2r1Key *dal.Key)
 func recordsMustExist(t *testing.T, records []dal.Record) (missingCount int) {
 	for _, record := range records {
 		if err := record.Error(); err != nil {
-			if !errors.Is(err, dal.NoError) {
+			if !errors.Is(err, dal.ErrNoError) {
 				t.Errorf("not able to check record for existence as it has unexpected error: %v", err)
 				missingCount++
 			}
