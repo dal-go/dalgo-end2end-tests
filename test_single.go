@@ -10,12 +10,10 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.DB) {
 	t.Run("single", func(t *testing.T) {
 		const id = "r0"
 		key := dal.NewKeyWithID(E2ETestKind1, id)
-		var keepGoing bool = true
-		if keepGoing {
-			keepGoing = t.Run("delete1", func(t *testing.T) {
-				testSingleDelete(t, db, key)
-			})
-		}
+		var keepGoing bool
+		keepGoing = t.Run("delete1", func(t *testing.T) {
+			testSingleDelete(t, db, key)
+		})
 		if keepGoing {
 			keepGoing = t.Run("get1", func(t *testing.T) {
 				testSingleGet(t, db, key, false)
