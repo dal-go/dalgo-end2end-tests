@@ -42,12 +42,12 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.DB) {
 			})
 		}
 		if keepGoing {
-			/*keepGoing*/ _ = t.Run("delete2", func(t *testing.T) {
+			keepGoing = t.Run("delete2", func(t *testing.T) {
 				testSingleDelete(t, db, key)
 			})
 		}
 		if keepGoing {
-			keepGoing = t.Run("exists3", func(t *testing.T) {
+			_ = t.Run("exists3", func(t *testing.T) {
 				testSingleExists(ctx, t, db, key, false)
 			})
 		}
