@@ -10,46 +10,49 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.DB) {
 	t.Run("single", func(t *testing.T) {
 		const id = "r0"
 		key := dal.NewKeyWithID(E2ETestKind1, id)
-		var keepGoing bool
-		keepGoing = t.Run("delete1", func(t *testing.T) {
+		if !t.Run("delete1", func(t *testing.T) {
 			testSingleDelete(t, db, key)
-		})
-		if keepGoing {
-			keepGoing = t.Run("get1", func(t *testing.T) {
-				testSingleGet(ctx, t, db, key, false)
-			})
+		}) {
+			return
 		}
-		if keepGoing {
-			keepGoing = t.Run("exists1", func(t *testing.T) {
-				testSingleExists(ctx, t, db, key, false)
-			})
+		if !t.Run("get1", func(t *testing.T) {
+			testSingleGet(ctx, t, db, key, false)
+		}) {
+			return
 		}
-		if keepGoing {
-			keepGoing = t.Run("create", func(t *testing.T) {
-				t.Run("with_predefined_id", func(t *testing.T) {
-					testSingleCreateWithPredefinedID(ctx, t, db, key)
-				})
-			})
+		if !t.Run("exists1", func(t *testing.T) {
+			testSingleExists(ctx, t, db, key, false)
+		}) {
+			return
 		}
-		if keepGoing {
-			keepGoing = t.Run("exists2", func(t *testing.T) {
-				testSingleExists(ctx, t, db, key, true)
-			})
+		if !t.Run("create", func(t *testing.T) {
+			if !t.Run("with_predefined_id", func(t *testing.T) {
+				testSingleCreateWithPredefinedID(ctx, t, db, key)
+			}) {
+				t.Error("failed in sub-test")
+			}
+		}) {
+			return
 		}
-		if keepGoing {
-			keepGoing = t.Run("get2", func(t *testing.T) {
-				testSingleGet(ctx, t, db, key, true)
-			})
+		if !t.Run("exists2", func(t *testing.T) {
+			testSingleExists(ctx, t, db, key, true)
+		}) {
+			return
 		}
-		if keepGoing {
-			keepGoing = t.Run("delete2", func(t *testing.T) {
-				testSingleDelete(t, db, key)
-			})
+		if !t.Run("get2", func(t *testing.T) {
+			testSingleGet(ctx, t, db, key, true)
+		}) {
+			return
 		}
-		if keepGoing {
-			_ = t.Run("exists3", func(t *testing.T) {
-				testSingleExists(ctx, t, db, key, false)
-			})
+		if !t.Run("delete2", func(t *testing.T) {
+			testSingleDelete(t, db, key)
+		}) {
+			return
+		}
+		if !t.Run("exists3", func(t *testing.T) {
+			testSingleExists(ctx, t, db, key, false)
+		}) {
+			return
 		}
 	})
 }
