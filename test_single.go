@@ -21,7 +21,7 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.DB) {
 		}
 		if keepGoing {
 			keepGoing = t.Run("exists1", func(t *testing.T) {
-				testSingleExists(ctx, t, db, key, true)
+				testSingleExists(ctx, t, db, key, false)
 			})
 		}
 		if keepGoing {
@@ -32,6 +32,11 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.DB) {
 			})
 		}
 		if keepGoing {
+			keepGoing = t.Run("exists2", func(t *testing.T) {
+				testSingleExists(ctx, t, db, key, true)
+			})
+		}
+		if keepGoing {
 			keepGoing = t.Run("get2", func(t *testing.T) {
 				testSingleGet(ctx, t, db, key, true)
 			})
@@ -39,6 +44,11 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.DB) {
 		if keepGoing {
 			/*keepGoing*/ _ = t.Run("delete2", func(t *testing.T) {
 				testSingleDelete(t, db, key)
+			})
+		}
+		if keepGoing {
+			keepGoing = t.Run("exists3", func(t *testing.T) {
+				testSingleExists(ctx, t, db, key, false)
 			})
 		}
 	})
@@ -55,23 +65,21 @@ func testSingleDelete(t *testing.T, db dal.DB, key *dal.Key) {
 
 }
 
-func testSingleExists(ctx context.Context, t *testing.T, db dal.DB, key *dal.Key, mustExists bool) {
+func testSingleExists(ctx context.Context, t *testing.T, db dal.DB, key *dal.Key, expectedToExist bool) {
 	exists, err := db.Exists(ctx, key)
 	if err != nil {
 		if dal.IsNotFound(err) {
-			if mustExists {
-				t.Errorf("record expected to exist but received not found error: %v", err)
-			}
+			t.Errorf("db.Exists(ctx, key) should return no error in case of NotFound error, got: %v", err)
 		} else {
 			t.Errorf("unexpected error: %v", err)
 		}
 		return
 	}
-	if mustExists && !exists {
+	if expectedToExist && !exists {
 		t.Error("record expected to exist but received exists=false")
 		return
 	}
-	if !mustExists && exists {
+	if !expectedToExist && exists {
 		t.Error("record expected NOT to exist but received exists=true")
 		return
 	}
