@@ -16,19 +16,24 @@ func testSingleOperations(ctx context.Context, t *testing.T, db dal.DB) {
 		})
 		if keepGoing {
 			keepGoing = t.Run("get1", func(t *testing.T) {
-				testSingleGet(t, db, key, false)
+				testSingleGet(ctx, t, db, key, false)
+			})
+		}
+		if keepGoing {
+			keepGoing = t.Run("exists1", func(t *testing.T) {
+				testSingleExists(ctx, t, db, key, true)
 			})
 		}
 		if keepGoing {
 			keepGoing = t.Run("create", func(t *testing.T) {
 				t.Run("with_predefined_id", func(t *testing.T) {
-					testSingleCreateWithPredefinedID(t, db, key)
+					testSingleCreateWithPredefinedID(ctx, t, db, key)
 				})
 			})
 		}
 		if keepGoing {
 			keepGoing = t.Run("get2", func(t *testing.T) {
-				testSingleGet(t, db, key, true)
+				testSingleGet(ctx, t, db, key, true)
 			})
 		}
 		if keepGoing {
@@ -50,10 +55,31 @@ func testSingleDelete(t *testing.T, db dal.DB, key *dal.Key) {
 
 }
 
-func testSingleGet(t *testing.T, db dal.DB, key *dal.Key, mustExists bool) {
+func testSingleExists(ctx context.Context, t *testing.T, db dal.DB, key *dal.Key, mustExists bool) {
+	exists, err := db.Exists(ctx, key)
+	if err != nil {
+		if dal.IsNotFound(err) {
+			if mustExists {
+				t.Errorf("record expected to exist but received not found error: %v", err)
+			}
+		} else {
+			t.Errorf("unexpected error: %v", err)
+		}
+		return
+	}
+	if mustExists && !exists {
+		t.Error("record expected to exist but received exists=false")
+		return
+	}
+	if !mustExists && exists {
+		t.Error("record expected NOT to exist but received exists=true")
+		return
+	}
+}
+
+func testSingleGet(ctx context.Context, t *testing.T, db dal.DB, key *dal.Key, mustExists bool) {
 	var data = new(TestData)
 	record := dal.NewRecordWithData(key, data)
-	ctx := context.Background()
 	err := db.Get(ctx, record)
 	if err != nil {
 		if dal.IsNotFound(err) {
@@ -76,13 +102,12 @@ func testSingleGet(t *testing.T, db dal.DB, key *dal.Key, mustExists bool) {
 	}
 }
 
-func testSingleCreateWithPredefinedID(t *testing.T, db dal.DB, key *dal.Key) {
+func testSingleCreateWithPredefinedID(ctx context.Context, t *testing.T, db dal.DB, key *dal.Key) {
 	data := TestData{
 		StringProp:  "str1",
 		IntegerProp: 1,
 	}
 	record := dal.NewRecordWithData(key, &data)
-	ctx := context.Background()
 	err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		return tx.Insert(ctx, record)
 	})
