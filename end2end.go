@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+var runSingleAndMulti = true // test hook to optionally skip single/multi in specialized tests
+
 // TestDalgoDB tests a dalgo DB implementation
 func TestDalgoDB(t *testing.T, db dal.DB, errQuerySupport error, eventuallyConsistent bool) {
 	if t == nil {
@@ -17,12 +19,15 @@ func TestDalgoDB(t *testing.T, db dal.DB, errQuerySupport error, eventuallyConsi
 
 	ctx := context.Background()
 
-	t.Run("single", func(t *testing.T) {
-		testSingleOperations(ctx, t, db)
-	})
-	t.Run("multi", func(t *testing.T) {
-		testMultiOperations(ctx, t, db)
-	})
+	if runSingleAndMulti {
+		t.Run("single", func(t *testing.T) {
+			testSingleOperations(ctx, t, db)
+		})
+		t.Run("multi", func(t *testing.T) {
+			testMultiOperations(ctx, t, db)
+		})
+	}
+
 	t.Run("query", func(t *testing.T) {
 		if errQuerySupport == nil {
 			testQueryOperations(ctx, t, db, eventuallyConsistent)
