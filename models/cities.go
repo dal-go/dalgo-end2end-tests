@@ -140,6 +140,8 @@ var Cities = []City{
 
 var SortedCityIDs []string
 
+var CityIDsSortedByPopulation []string
+
 func CityID(city City) string {
 	return fmt.Sprintf("%s_%s", city.State, city.Name)
 }
@@ -151,4 +153,14 @@ func init() {
 		SortedCityIDs[i] = dal.EscapeID(CityID(city))
 	}
 	sort.Strings(SortedCityIDs)
+
+	citiesSortedByPopulation := make([]City, len(Cities))
+	copy(citiesSortedByPopulation, Cities)
+	sort.Slice(citiesSortedByPopulation, func(i, j int) bool {
+		return citiesSortedByPopulation[i].Population < citiesSortedByPopulation[j].Population
+	})
+	CityIDsSortedByPopulation = make([]string, len(citiesSortedByPopulation))
+	for i, city := range citiesSortedByPopulation {
+		CityIDsSortedByPopulation[i] = CityID(city)
+	}
 }

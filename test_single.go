@@ -61,7 +61,7 @@ func testSingleDelete(t *testing.T, db dal.DB, key *dal.Key) {
 	ctx := context.Background()
 	err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		return tx.Delete(ctx, key)
-	})
+	}, dal.TxWithName("testSingleDelete"))
 	if err != nil {
 		t.Errorf("Failed to delete: %v", err)
 	}
@@ -121,7 +121,7 @@ func testSingleCreateWithPredefinedID(ctx context.Context, t *testing.T, db dal.
 	record := dal.NewRecordWithData(key, &data)
 	err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		return tx.Insert(ctx, record)
-	})
+	}, dal.TxWithName("testSingleCreateWithPredefinedID"))
 	if err != nil {
 		t.Errorf("got unexpected error: %v", err)
 	}
