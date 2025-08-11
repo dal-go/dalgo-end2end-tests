@@ -2,7 +2,7 @@ module github.com/dal-go/dalgo-end2end-tests
 
 go 1.23
 
-toolchain go1.24.4
+toolchain go1.24.6
 
 require (
 	github.com/dal-go/dalgo v0.26.3
