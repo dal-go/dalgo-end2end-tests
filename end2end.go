@@ -21,16 +21,16 @@ func TestDalgoDB(t *testing.T, db dal.DB, errQuerySupport error, eventuallyConsi
 
 	if runSingleAndMulti {
 		t.Run("single", func(t *testing.T) {
-			testSingleOperations(ctx, t, db)
+			singleOperationsTest(ctx, t, db)
 		})
 		t.Run("multi", func(t *testing.T) {
-			testMultiOperations(ctx, t, db)
+			multiOperationsTest(ctx, t, db)
 		})
 	}
 
 	t.Run("query", func(t *testing.T) {
 		if errQuerySupport == nil {
-			testQueryOperations(ctx, t, db, eventuallyConsistent)
+			queryOperationsTest(ctx, t, db, eventuallyConsistent)
 		} else {
 			t.Skip("query not supported by dalgo driver or unerlying DB:", errQuerySupport)
 		}

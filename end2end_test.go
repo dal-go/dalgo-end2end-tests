@@ -140,14 +140,14 @@ func TestEndToEnd(t *testing.T) {
 				}
 				return
 			})
-		case "testSingleDelete":
+		case "singleDeleteTest":
 			tx.EXPECT().Delete(ctx, gomock.Any()).Return(nil).Times(1)
 		case "deleteAllRecords":
 			tx.EXPECT().DeleteMulti(ctx, gomock.Any()).Return(nil).Times(1)
 		case "deleteAllCities":
 			tx.EXPECT().DeleteMulti(ctx, gomock.Any()).Return(nil).Times(1)
 			tx.EXPECT().QueryReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.SortedCityIDs))
-		case "testSingleCreateWithPredefinedID":
+		case "singleCreateWithPredefinedIDTest":
 			tx.EXPECT().Insert(ctx, gomock.Any()).Return(nil).Times(1)
 		case "setMulti":
 			tx.EXPECT().SetMulti(ctx, gomock.Any()).Return(nil).Times(1)
