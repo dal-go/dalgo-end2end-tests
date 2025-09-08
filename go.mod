@@ -2,11 +2,11 @@ module github.com/dal-go/dalgo-end2end-tests
 
 go 1.23.0
 
-toolchain go1.25.0
+toolchain go1.25.1
 
 require (
-	github.com/dal-go/dalgo v0.26.4
-	github.com/dal-go/mocks4dalgo v0.3.8
+	github.com/dal-go/dalgo v0.26.5
+	github.com/dal-go/mocks4dalgo v0.3.10
 	github.com/stretchr/testify v1.11.1
 	github.com/strongo/validation v0.0.7
 	go.uber.org/mock v0.6.0
