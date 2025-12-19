@@ -3,21 +3,22 @@ package end2end
 import (
 	"context"
 	"fmt"
-	"github.com/dal-go/dalgo-end2end-tests/models"
-	"github.com/dal-go/dalgo/dal"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/dal-go/dalgo-end2end-tests/models"
+	"github.com/dal-go/dalgo/dal"
+	"github.com/stretchr/testify/assert"
 )
 
 func selectAllCities(ctx context.Context, db dal.DB) (records []dal.Record, err error) {
-	q := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).SelectInto(func() dal.Record {
+	q := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).NewQuery().SelectInto(func() dal.Record {
 		return dal.NewRecordWithIncompleteKey(models.CitiesCollection, reflect.String, &models.City{})
 	})
 	err = db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-		records, err = tx.QueryAllRecords(ctx, q)
+		records, err = tx.ReadAllRecords(ctx, q)
 		return err
 	}, dal.TxWithName("selectAllCities"))
 	return
@@ -44,14 +45,14 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		return dal.NewRecordWithIncompleteKey(models.CitiesCollection, reflect.String, &models.City{})
 	}
 	t.Run(`SELECT ID FROM Cities`, func(t *testing.T) {
-		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, ""))
+		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).NewQuery()
 		t.Run("no_limit", func(t *testing.T) {
 			q := qb.SelectKeysOnly(reflect.String)
 			if q == nil {
 				t.Fatalf("query is nil")
 			}
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.QueryReader(ctx, q)
+				reader, err := tx.GetReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -74,7 +75,7 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		t.Run("limit=3", func(t *testing.T) {
 			q := qb.Limit(3).SelectKeysOnly(reflect.String)
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.QueryReader(ctx, q)
+				reader, err := tx.GetReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -96,11 +97,11 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		})
 	})
 	t.Run(`SELECT * FROM Cities`, func(t *testing.T) {
-		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, ""))
+		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).NewQuery()
 		t.Run("no_limit", func(t *testing.T) {
 			query2 := qb.SelectInto(newCityRecord)
 			err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
-				records, err := tx.QueryAllRecords(ctx, query2)
+				records, err := tx.ReadAllRecords(ctx, query2)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -112,7 +113,7 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		t.Run("limit=3", func(t *testing.T) {
 			q := qb.Limit(3).SelectInto(newCityRecord)
 			err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
-				records, err := tx.QueryAllRecords(ctx, q)
+				records, err := tx.ReadAllRecords(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -125,12 +126,12 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 	t.Run("SELECT ID FROM Cities ORDER BY Population", func(t *testing.T) {
 		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, ""))
 		t.Run("ascending", func(t *testing.T) {
-			q := qb.
+			q := qb.NewQuery().
 				OrderBy(dal.AscendingField("Population")).
 				Limit(3).
 				SelectKeysOnly(reflect.String)
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.QueryReader(ctx, q)
+				reader, err := tx.GetReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -152,12 +153,12 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 			assert.Nil(t, err)
 		})
 		t.Run("descending", func(t *testing.T) {
-			q := qb.
+			q := qb.NewQuery().
 				OrderBy(dal.DescendingField("Population")).
 				Limit(3).
 				SelectKeysOnly(reflect.String)
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.QueryReader(ctx, q)
+				reader, err := tx.GetReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -181,11 +182,11 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		})
 	})
 	t.Run("SELECT_ID_FROM_Cities_WHERE_Country_=_'IN'", func(t *testing.T) {
-		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, ""))
+		qb := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).NewQuery()
 		t.Run("no_limit", func(t *testing.T) {
 			q := qb.WhereField("Country", dal.Equal, "IN").SelectKeysOnly(reflect.String)
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.QueryReader(ctx, q)
+				reader, err := tx.GetReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -212,9 +213,9 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 
 func deleteAllCities(ctx context.Context, db dal.DB) (err error) {
 	err = db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
-		q := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).Limit(1000).SelectKeysOnly(reflect.String)
+		q := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).NewQuery().Limit(1000).SelectKeysOnly(reflect.String)
 		var reader dal.Reader
-		if reader, err = tx.QueryReader(ctx, q); err != nil {
+		if reader, err = tx.GetReader(ctx, q); err != nil {
 			return fmt.Errorf("failed to query all cities: %w", err)
 		}
 		//defer func() {

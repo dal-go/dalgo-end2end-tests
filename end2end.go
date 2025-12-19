@@ -2,8 +2,9 @@ package end2end
 
 import (
 	"context"
-	"github.com/dal-go/dalgo/dal"
 	"testing"
+
+	"github.com/dal-go/dalgo/dal"
 )
 
 var runSingleAndMulti = true // test hook to optionally skip single/multi in specialized tests
@@ -32,7 +33,7 @@ func TestDalgoDB(t *testing.T, db dal.DB, errQuerySupport error, eventuallyConsi
 		if errQuerySupport == nil {
 			queryOperationsTest(ctx, t, db, eventuallyConsistent)
 		} else {
-			t.Skip("query not supported by dalgo driver or unerlying DB:", errQuerySupport)
+			t.Skip("query not supported by dalgo driver or underlying DB:", errQuerySupport)
 		}
 	})
 }

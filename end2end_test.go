@@ -2,12 +2,14 @@ package end2end
 
 import (
 	"context"
+	"fmt"
+	"slices"
+	"testing"
+
 	"github.com/dal-go/dalgo-end2end-tests/models"
 	"github.com/dal-go/dalgo/dal"
 	"github.com/dal-go/mocks4dalgo/mock_dal"
 	"go.uber.org/mock/gomock"
-	"slices"
-	"testing"
 )
 
 func TestEndToEnd_panics(t *testing.T) {
@@ -83,25 +85,31 @@ func TestEndToEnd(t *testing.T) {
 			i := 0
 			sortedCityIDs := make([]string, len(cityIDs))
 			copy(sortedCityIDs, cityIDs)
-			if orderBy := query.OrderBy(); len(orderBy) == 1 {
-				if orderBy[0].Descending() {
-					slices.Reverse(sortedCityIDs)
+			switch q := query.(type) {
+			case dal.StructuredQuery:
+				if orderBy := q.OrderBy(); len(orderBy) == 1 {
+					if orderBy[0].Descending() {
+						slices.Reverse(sortedCityIDs)
+					}
 				}
-			}
-			limit := query.Limit()
-			if citiesCount := len(sortedCityIDs); limit == 0 || limit > citiesCount {
-				limit = citiesCount
-			}
-			reader.EXPECT().Next().DoAndReturn(func() (r dal.Record, err error) {
-				if i >= limit {
-					return nil, dal.ErrNoMoreRecords
+				limit := query.Limit()
+				if citiesCount := len(sortedCityIDs); limit == 0 || limit > citiesCount {
+					limit = citiesCount
 				}
-				r = keyOnlyRecord(models.CitiesCollection, sortedCityIDs[i])
-				i++
-				return
-			}).AnyTimes()
-			reader.EXPECT().Close().Times(1)
-			return reader, nil
+				reader.EXPECT().Next().DoAndReturn(func() (r dal.Record, err error) {
+					if i >= limit {
+						return nil, dal.ErrNoMoreRecords
+					}
+					r = keyOnlyRecord(models.CitiesCollection, sortedCityIDs[i])
+					i++
+					return
+				}).AnyTimes()
+				reader.EXPECT().Close().Times(1)
+				return reader, nil
+			default:
+				return nil, fmt.Errorf("unexpected query type: %T", query)
+
+			}
 		}
 	}
 
@@ -115,10 +123,10 @@ func TestEndToEnd(t *testing.T) {
 		//tx.EXPECT().Options().Return(txOptions)
 
 		txName := txOptions.Name()
-		t.Log("RW tx:", txName)
+		//t.Log("RW tx:", txName)
 		switch txName {
 		case "SELECT * FROM Cities: no_limit":
-			tx.EXPECT().QueryAllRecords(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, query dal.Query) (records []dal.Record, err error) {
+			tx.EXPECT().ReadAllRecords(ctx, gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, query dal.Query, o ...dal.ReaderOption) (records []dal.Record, err error) {
 				records = make([]dal.Record, len(models.Cities))
 				for i, city := range models.Cities {
 					key := dal.NewKeyWithID("c1", city)
@@ -127,7 +135,7 @@ func TestEndToEnd(t *testing.T) {
 				return
 			})
 		case "SELECT * FROM Cities: limit=3":
-			tx.EXPECT().QueryAllRecords(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, query dal.Query) (records []dal.Record, err error) {
+			tx.EXPECT().ReadAllRecords(ctx, gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, query dal.Query, o ...dal.ReaderOption) (records []dal.Record, err error) {
 				records = make([]dal.Record, 3)
 				for i, cityID := range models.SortedCityIDs[:3] {
 					key := dal.NewKeyWithID("c1", cityID)
@@ -146,7 +154,7 @@ func TestEndToEnd(t *testing.T) {
 			tx.EXPECT().DeleteMulti(ctx, gomock.Any()).Return(nil).Times(1)
 		case "deleteAllCities":
 			tx.EXPECT().DeleteMulti(ctx, gomock.Any()).Return(nil).Times(1)
-			tx.EXPECT().QueryReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.SortedCityIDs))
+			tx.EXPECT().GetReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.SortedCityIDs))
 		case "singleCreateWithPredefinedIDTest":
 			tx.EXPECT().Insert(ctx, gomock.Any()).Return(nil).Times(1)
 		case "setMulti":
@@ -172,16 +180,16 @@ func TestEndToEnd(t *testing.T) {
 		//tx.EXPECT().Options().Return(txOptions)
 
 		txName := txOptions.Name()
-		t.Log("RO tx:", txName)
+		//t.Log("RO tx:", txName)
 		switch txName {
 		case "SELECT ID FROM Cities; limit=0":
-			tx.EXPECT().QueryReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.SortedCityIDs))
+			tx.EXPECT().GetReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.SortedCityIDs))
 		case "SELECT ID FROM Cities ORDER BY Population; limit=3":
-			tx.EXPECT().QueryReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.CityIDsSortedByPopulation))
+			tx.EXPECT().GetReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.CityIDsSortedByPopulation))
 		case "SELECT ID FROM Cities ORDER BY Population DESCENDING; limit=3":
-			tx.EXPECT().QueryReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.CityIDsSortedByPopulation))
+			tx.EXPECT().GetReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.CityIDsSortedByPopulation))
 		case "SELECT ID FROM Cities WHERE Country = 'IN'":
-			tx.EXPECT().QueryReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs([]string{"Delhi_Delhi", "Maharashtra_Mumbai"}))
+			tx.EXPECT().GetReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs([]string{"Delhi_Delhi", "Maharashtra_Mumbai"}))
 		case "verify_cleanupDelete":
 			tx.EXPECT().GetMulti(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, records []dal.Record) error {
 				for _, record := range records {
@@ -243,9 +251,9 @@ func TestEndToEnd(t *testing.T) {
 				return nil
 			}).Times(1)
 		case "selectAllCities":
-			tx.EXPECT().QueryAllRecords(ctx, gomock.Any()).Return([]dal.Record{}, nil).Times(1)
+			tx.EXPECT().ReadAllRecords(ctx, gomock.Any(), gomock.Any()).Return([]dal.Record{}, nil).Times(1)
 		case "SELECT ID FROM Cities; limit=3":
-			tx.EXPECT().QueryReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.SortedCityIDs))
+			tx.EXPECT().GetReader(gomock.Any(), gomock.Any()).DoAndReturn(readCityIDs(models.SortedCityIDs))
 		case "":
 			panic("no RO tx name")
 		default:
