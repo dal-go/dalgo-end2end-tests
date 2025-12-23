@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dal-go/mocks4dalgo/mock_dal"
+	"github.com/dal-go/dalgo/mocks/mock_dal"
 	"go.uber.org/mock/gomock"
 )
 
