@@ -2,9 +2,10 @@ package models
 
 import (
 	"fmt"
-	"github.com/dal-go/dalgo/dal"
 	"sort"
 	"time"
+
+	"github.com/dal-go/dalgo/dal"
 )
 
 const CitiesCollection = "DalgoTest_Cities"

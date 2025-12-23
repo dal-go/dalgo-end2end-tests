@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/dal-go/dalgo/dal"
 	"github.com/dal-go/dalgo/update"
-	"testing"
 )
 
 func deleteAllRecords(ctx context.Context, t *testing.T, db dal.DB, keys []*dal.Key) {

@@ -2,8 +2,9 @@ package end2end
 
 import (
 	"fmt"
-	"github.com/strongo/validation"
 	"strings"
+
+	"github.com/strongo/validation"
 )
 
 const (
@@ -14,7 +15,7 @@ const (
 	// E2ETestKind2 defines table or collection name for an entity to be stored in
 	E2ETestKind2 = TestEntitiesNamePrefix + "E2ETest2"
 
-	UserKind = TestEntitiesNamePrefix + "User"
+	//UserKind = TestEntitiesNamePrefix + "User"
 )
 
 type User struct {

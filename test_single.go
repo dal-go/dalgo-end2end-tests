@@ -2,8 +2,9 @@ package end2end
 
 import (
 	"context"
-	"github.com/dal-go/dalgo/dal"
 	"testing"
+
+	"github.com/dal-go/dalgo/dal"
 )
 
 func singleOperationsTest(ctx context.Context, t *testing.T, db dal.DB) {
