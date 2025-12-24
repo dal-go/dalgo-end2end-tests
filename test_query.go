@@ -52,7 +52,7 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 				t.Fatalf("query is nil")
 			}
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.GetRecordsReader(ctx, q)
+				reader, err := tx.ExecuteQueryToRecordsReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -75,7 +75,7 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		t.Run("limit=3", func(t *testing.T) {
 			q := qb.Limit(3).SelectKeysOnly(reflect.String)
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.GetRecordsReader(ctx, q)
+				reader, err := tx.ExecuteQueryToRecordsReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -131,7 +131,7 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 				Limit(3).
 				SelectKeysOnly(reflect.String)
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.GetRecordsReader(ctx, q)
+				reader, err := tx.ExecuteQueryToRecordsReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -158,7 +158,7 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 				Limit(3).
 				SelectKeysOnly(reflect.String)
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.GetRecordsReader(ctx, q)
+				reader, err := tx.ExecuteQueryToRecordsReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -186,7 +186,7 @@ func queryOperationsTest(ctx context.Context, t *testing.T, db dal.DB, eventuall
 		t.Run("no_limit", func(t *testing.T) {
 			q := qb.WhereField("Country", dal.Equal, "IN").SelectKeysOnly(reflect.String)
 			err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
-				reader, err := tx.GetRecordsReader(ctx, q)
+				reader, err := tx.ExecuteQueryToRecordsReader(ctx, q)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -215,7 +215,7 @@ func deleteAllCities(ctx context.Context, db dal.DB) (err error) {
 	err = db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		q := dal.From(dal.NewRootCollectionRef(models.CitiesCollection, "")).NewQuery().Limit(1000).SelectKeysOnly(reflect.String)
 		var reader dal.RecordsReader
-		if reader, err = tx.GetRecordsReader(ctx, q); err != nil {
+		if reader, err = tx.ExecuteQueryToRecordsReader(ctx, q); err != nil {
 			return fmt.Errorf("failed to query all cities: %w", err)
 		}
 		//defer func() {
