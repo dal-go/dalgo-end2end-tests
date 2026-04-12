@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.26.2
 
 require (
-	github.com/dal-go/dalgo v0.41.10
+	github.com/dal-go/dalgo v0.41.11
 	github.com/stretchr/testify v1.11.1
 	github.com/strongo/validation v0.0.8
 	go.uber.org/mock v0.6.0
@@ -15,7 +15,7 @@ require (
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
-	github.com/RoaringBitmap/roaring/v2 v2.16.0 // indirect
+	github.com/RoaringBitmap/roaring/v2 v2.16.2 // indirect
 	github.com/bits-and-blooms/bitset v1.24.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
