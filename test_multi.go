@@ -13,7 +13,7 @@ import (
 func deleteAllRecords(ctx context.Context, t *testing.T, db dal.DB, keys []*dal.Key) {
 	err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		return tx.DeleteMulti(ctx, keys)
-	}, dal.TxWithName("deleteAllRecords"))
+	}, dal.TxWithMessage("deleteAllRecords"))
 	if err != nil {
 		t.Fatalf("failed at DeleteMulti(ctx, keys) for %v records: %v", len(keys), err)
 	}
@@ -74,7 +74,7 @@ func getMulti2existing2missingRecords(t *testing.T, db dal.DB, k1r1Key, k1r2Key 
 	ctx := context.Background()
 	if err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
 		return tx.GetMulti(ctx, records)
-	}, dal.TxWithName("getMulti2existing2missingRecords")); err != nil {
+	}, dal.TxWithMessage("getMulti2existing2missingRecords")); err != nil {
 		t.Fatalf("failed to set multiple records at once: %v", err)
 	}
 	hasErrors := recordsMustExist(t, records[:2]) > 0
@@ -113,7 +113,7 @@ func get3NonExistingRecords(t *testing.T, db dal.DB) {
 
 	if err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
 		return tx.GetMulti(ctx, records)
-	}, dal.TxWithName("get3NonExistingRecords")); err != nil {
+	}, dal.TxWithMessage("get3NonExistingRecords")); err != nil {
 		t.Fatalf("failed to get multiple records at once: %v", err)
 	}
 	recordsMustNotExist(t, records)
@@ -133,7 +133,7 @@ func setMulti(t *testing.T, db dal.DB, k1r1Key, k1r2Key, k2r1Key *dal.Key) {
 	ctx := context.Background()
 	err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		return tx.SetMulti(ctx, records)
-	}, dal.TxWithName("setMulti"))
+	}, dal.TxWithMessage("setMulti"))
 	if err != nil {
 		t.Fatalf("failed to set multiple records at once: %v", err)
 	}
@@ -149,7 +149,7 @@ func cleanupDelete(t *testing.T, db dal.DB, allKeys []*dal.Key) {
 	}
 	if err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
 		return tx.GetMulti(ctx, records)
-	}, dal.TxWithName("verify_cleanupDelete")); err != nil {
+	}, dal.TxWithMessage("verify_cleanupDelete")); err != nil {
 		t.Fatalf("failed to get multiple records at once: %v", err)
 	}
 	recordsMustNotExist(t, records)
@@ -174,7 +174,7 @@ func update2records(t *testing.T, db dal.DB, k1r1Key, k1r2Key, k2r1Key *dal.Key)
 	ctx := context.Background()
 	err := db.RunReadwriteTransaction(ctx, func(ctx context.Context, tx dal.ReadwriteTransaction) error {
 		return tx.UpdateMulti(ctx, []*dal.Key{k1r1Key, k1r2Key}, updates)
-	}, dal.TxWithName("update2records"))
+	}, dal.TxWithMessage("update2records"))
 	if err != nil {
 		if errors.Is(err, dal.ErrNotSupported) {
 			t.Log(err)
@@ -185,7 +185,7 @@ func update2records(t *testing.T, db dal.DB, k1r1Key, k1r2Key, k2r1Key *dal.Key)
 	records := newRecords()
 	if err = db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
 		return tx.GetMulti(ctx, records)
-	}, dal.TxWithName("getMultiNewRecords")); err != nil {
+	}, dal.TxWithMessage("getMultiNewRecords")); err != nil {
 		t.Fatalf("failed to get 3 records at once: %v", err)
 	}
 	if recordsMustExist(t, records) > 0 {
@@ -257,7 +257,7 @@ func getMulti3existingRecords(t *testing.T, allKeys []*dal.Key, db dal.DB) {
 		ctx := context.Background()
 		if err := db.RunReadonlyTransaction(ctx, func(ctx context.Context, tx dal.ReadTransaction) error {
 			return tx.GetMulti(ctx, records)
-		}, dal.TxWithName("using_records_with_data")); err != nil {
+		}, dal.TxWithMessage("using_records_with_data")); err != nil {
 			t.Fatalf("failed to get multiple records at once: %v", err)
 		}
 		if recordsMustExist(t, records) > 0 {
